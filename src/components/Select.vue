@@ -809,7 +809,6 @@
        */
       onAfterSelect(option) {
         if (this.closeOnSelect) {
-          console.log(this.open);
           this.open = !this.open;
           this.$refs.search.blur()
         }
