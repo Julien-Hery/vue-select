@@ -755,8 +755,12 @@
        * @return {void}
        */
       select(option) {
-        if (this.multiple && this.isOptionSelected(option)) {
-            this.deselect(option)
+        if (this.isOptionSelected(option)) {
+            if (this.multiple) {
+              this.deselect(option)
+            } else {
+              this.onchange ? this.onChange(option) : null;
+            }
         } else {
           if (this.taggable && !this.optionExists(option)) {
             option = this.createOption(option)
