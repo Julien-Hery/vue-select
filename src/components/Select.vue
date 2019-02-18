@@ -775,7 +775,6 @@
           }
         }
 
-        this.$emit('input', option);
         this.onAfterSelect(option)
       },
 
@@ -821,6 +820,8 @@
         if (this.clearSearchOnSelect) {
           this.search = ''
         }
+
+        this.$emit('input', option);
       },
 
       /**
