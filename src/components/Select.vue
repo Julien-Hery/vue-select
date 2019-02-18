@@ -761,6 +761,7 @@
             this.deselect(option)
           } else {
             this.onChange ? this.onChange(option) : null;
+            this.onAfterSelect(option);
           }
         } else {
           if (this.taggable && !this.optionExists(option)) {
@@ -814,7 +815,7 @@
        */
       onAfterSelect(option) {
         if (this.closeOnSelect) {
-          this.open = !this.open
+          this.open = !this.open;
           this.$refs.search.blur()
         }
 
