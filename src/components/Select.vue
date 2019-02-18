@@ -775,6 +775,7 @@
           }
         }
 
+        this.$emit('input', option);
         this.onAfterSelect(option)
       },
 
