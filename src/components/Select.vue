@@ -384,13 +384,13 @@
               aria-label="Search for option"
       >
 
-      <button 
-        v-show="showClearButton" 
-        :disabled="disabled" 
+      <button
+        v-show="showClearButton"
+        :disabled="disabled"
         @click="clearSelection"
-        type="button" 
-        class="clear" 
-        title="Clear selection" 
+        type="button"
+        class="clear"
+        title="Clear selection"
       >
         <span aria-hidden="true">&times;</span>
       </button>
@@ -700,11 +700,7 @@
        * @return {void}
        */
 			mutableValue(val, old) {
-        if (this.multiple) {
-          this.onChange ? this.onChange(val) : null
-        } else {
-          this.onChange && val !== old ? this.onChange(val) : null
-        }
+          this.onChange ? this.onChange(val) : null;
       },
 
       /**
@@ -759,7 +755,7 @@
        * @return {void}
        */
       select(option) {
-        if (this.isOptionSelected(option)) {
+        if (this.isOptionSelected(option) && this.multiple) {
           this.deselect(option)
         } else {
           if (this.taggable && !this.optionExists(option)) {
