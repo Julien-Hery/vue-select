@@ -690,7 +690,7 @@
        * @return {void}
        */
       value(val) {
-				this.mutableValue = val
+          this.mutableValue = val
       },
 
       /**
@@ -755,14 +755,8 @@
        * @return {void}
        */
       select(option) {
-        if (this.isOptionSelected(option)) {
-          if (this.multiple) {
-
+        if (this.multiple && this.isOptionSelected(option)) {
             this.deselect(option)
-          } else {
-            this.onChange ? this.onChange(option) : null;
-            this.onAfterSelect(option);
-          }
         } else {
           if (this.taggable && !this.optionExists(option)) {
             option = this.createOption(option)
@@ -815,6 +809,7 @@
        */
       onAfterSelect(option) {
         if (this.closeOnSelect) {
+          console.log(this.open);
           this.open = !this.open;
           this.$refs.search.blur()
         }
