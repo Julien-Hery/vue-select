@@ -821,7 +821,9 @@
           this.search = ''
         }
 
-        this.$emit('input', option);
+        if (!this.multiple) {
+            this.$emit('input', option);
+        }
       },
 
       /**
