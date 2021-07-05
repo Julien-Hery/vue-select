@@ -403,9 +403,9 @@
     </div>
 
     <transition :name="transition">
-      <ul ref="dropdownMenu" v-if="dropdownOpen" class="dropdown-menu" :style="{ 'max-height': maxHeight }">
+      <ul ref="dropdownMenu" v-if="dropdownOpen" class="dropdown-menu" :style="{ 'max-height': maxHeight }" @mousedown="onMousedown" @mouseup="onMouseup">
         <li v-for="(option, index) in filteredOptions" v-bind:key="index" :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }" @mouseover="typeAheadPointer = index">
-          <a @mousedown.prevent="select(option)">
+          <a @mousedown.prevent.stop="select(option)">
           <slot name="option" v-bind="option">
             {{ getOptionLabel(option) }}
           </slot>
@@ -678,7 +678,8 @@
         search: '',
         open: false,
         mutableValue: null,
-        mutableOptions: []
+        mutableOptions: [],
+        mousedown: false
       }
     },
 
@@ -748,7 +749,12 @@
     },
 
     methods: {
-
+      onMousedown() {
+        this.mousedown = true;
+      },
+      onMouseup() {
+        this.mousedown = true;
+      },
       /**
        * Select a given option.
        * @param  {Object|String} option
@@ -887,11 +893,15 @@
        * @return {void}
        */
       onSearchBlur() {
-        if (this.clearSearchOnBlur) {
-          this.search = ''
+       if (this.mousedown && !this.searching) {
+         this.mousedown = false
+       } else {
+         if (this.clearSearchOnBlur) {
+           this.search = ''
+         }
+         this.open = false
+         this.$emit('search:blur')
         }
-        this.open = false
-        this.$emit('search:blur')
       },
 
       /**
@@ -1003,9 +1013,11 @@
        * @return {String} Placeholder text
        */
       searchPlaceholder() {
+          console.log("call placeholder", this.isValueEmpty, this.placeholder);
         if (this.isValueEmpty && this.placeholder) {
           return this.placeholder;
         }
+        return "";
       },
 
       /**
