@@ -1,7 +1,7 @@
 <style>
   .v-select {
     position: relative;
-    font-family: sans-serif;
+    font-family: inherit;
   }
 
   .v-select.direction-top {
@@ -31,35 +31,35 @@
     -moz-box-sizing: border-box;
     box-sizing: border-box;
   }
-  /* Rtl support */
-  .v-select.rtl .open-indicator {
-    left: 10px;
-    right: auto;
+
+  /* Rtl support - Because we're using a flexbox-based layout, the `dir="rtl"` HTML
+     attribute does most of the work for us by rearranging the child elements visually.
+   */
+  .v-select[dir="rtl"] .vs__actions {
+    padding: 0 3px 0 6px;
   }
-  .v-select.rtl .selected-tag {
-    float: right;
-    margin-right: 3px;
-    margin-left: 1px;
+  .v-select[dir="rtl"] .dropdown-toggle .clear {
+    margin-left: 6px;
+    margin-right: 0;
   }
-  .v-select.rtl .dropdown-menu {
+  .v-select[dir="rtl"] .selected-tag .close {
+    margin-left: 0;
+    margin-right: 2px;
+  }
+  .v-select[dir="rtl"] .dropdown-menu {
     text-align: right;
   }
-  .v-select.rtl .dropdown-toggle .clear {
-    left: 30px;
-    right: auto;
-  }
+
   /* Open Indicator */
   .v-select .open-indicator {
-    position: absolute;
-    bottom: 6px;
-    right: 10px;
-    display: inline-block;
+    display: flex;
+    align-items: center;
     cursor: pointer;
     pointer-events: all;
     transition: all 150ms cubic-bezier(1.000, -0.115, 0.975, 0.855);
     transition-timing-function: cubic-bezier(1.000, -0.115, 0.975, 0.855);
     opacity: 1;
-    height: 20px; width: 10px;
+    width: 12px; /* To account for extra width from rotating. */
   }
   .v-select .open-indicator:before {
     border-color: rgba(60, 60, 60, .5);
@@ -69,7 +69,7 @@
     display: inline-block;
     height: 10px;
     width: 10px;
-    vertical-align: top;
+    vertical-align: text-top;
     transform: rotate(133deg);
     transition: all 150ms cubic-bezier(1.000, -0.115, 0.975, 0.855);
     transition-timing-function: cubic-bezier(1.000, -0.115, 0.975, 0.855);
@@ -82,43 +82,47 @@
   .v-select.loading .open-indicator {
     opacity: 0;
   }
-  .v-select.open .open-indicator {
-    bottom: 1px;
-  }
+
   /* Dropdown Toggle */
   .v-select .dropdown-toggle {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    display: block;
-    padding: 0;
+    display: flex;
+    padding: 0 0 4px 0;
     background: none;
     border: 1px solid rgba(60, 60, 60, .26);
     border-radius: 4px;
     white-space: normal;
   }
-  .v-select .dropdown-toggle:after {
-    visibility: hidden;
-    display: block;
-    font-size: 0;
-    content: " ";
-    clear: both;
-    height: 0;
+  .v-select .dropdown-toggle::after {
+    display: none;
+  }
+  .v-select .vs__selected-options {
+    display: flex;
+    flex-basis: 100%;
+    flex-grow: 1;
+    flex-wrap: wrap;
+    padding: 0 2px;
+    position: relative;
+  }
+  .v-select .vs__actions {
+    display: flex;
+    align-items: stretch;
+    padding: 0 6px 0 3px;
   }
 
   /* Clear Button */
   .v-select .dropdown-toggle .clear {
-    position: absolute;
-    bottom: 9px;
-    right: 30px;
     font-size: 23px;
     font-weight: 700;
     line-height: 1;
-    color: rgba(60, 60, 60, .5);
+    color: rgba(60, 60, 60, 0.5);
     padding: 0;
     border: 0;
     background-color: transparent;
     cursor: pointer;
+    margin-right: 6px;
   }
 
   /* Dropdown Toggle States */
@@ -156,7 +160,7 @@
     padding: 5px 0;
     margin: 0;
     width: 100%;
-    overflow-y: scroll;
+    overflow-y: auto;
     border: 1px solid rgba(0, 0, 0, .26);
     box-shadow: 0px 3px 6px 0px rgba(0,0,0,.15);
     border-top: none;
@@ -178,15 +182,16 @@
   }
   /* Selected Tags */
   .v-select .selected-tag {
-    color: #333;
+    display: flex;
+    align-items: center;
     background-color: #f0f0f0;
     border: 1px solid #ccc;
     border-radius: 4px;
-    height: 26px;
-    margin: 4px 1px 0px 3px;
-    padding: 1px 0.25em;
-    float: left;
-    line-height: 24px;
+    color: #333;
+    line-height: 1.42857143; /* Normalize line height */
+    margin: 4px 2px 0px 2px;
+    padding: 0 0.25em;
+    transition: opacity .25s;
   }
   .v-select.single .selected-tag {
     background-color: transparent;
@@ -194,16 +199,14 @@
   }
   .v-select.single.open .selected-tag {
     position: absolute;
-    opacity: .5;
+    opacity: .4;
   }
-  .v-select.single.open.searching .selected-tag,
-  .v-select.single.loading .selected-tag {
+  .v-select.single.searching .selected-tag {
     display: none;
   }
   .v-select .selected-tag .close {
-    float: none;
-    margin-right: 0;
-    font-size: 20px;
+    margin-left: 2px;
+    font-size: 1.25em;
     appearance: none;
     padding: 0;
     cursor: pointer;
@@ -235,26 +238,28 @@
     -webkit-appearance: none;
     -moz-appearance: none;
     line-height: 1.42857143;
-    font-size:1em;
-    height: 34px;
+    font-size: 1em;
     display: inline-block;
-    border: none;
+    border: 1px solid transparent;
+    border-left: none;
     outline: none;
-    margin: 0;
-    padding: 0 .5em;
-    width: 10em;
+    margin: 4px 0 0 0;
+    padding: 0 7px;
     max-width: 100%;
     background: none;
-    position: relative;
     box-shadow: none;
+    flex-grow: 1;
+    width: 0;
+    height: inherit;
   }
   .v-select.unsearchable input[type="search"] {
-    opacity: 0;
+    opacity: 1;
   }
   .v-select.unsearchable input[type="search"]:hover {
     cursor: pointer;
   }
-    /* List Items */
+
+  /* List Items */
   .v-select li {
     line-height: 1.42857143; /* Normalize line height */
   }
@@ -285,10 +290,8 @@
   }
   /* Loading Spinner */
   .v-select .spinner {
+    align-self: center;
     opacity: 0;
-    position: absolute;
-    top: 5px;
-    right: 10px;
     font-size: 5px;
     text-indent: -9999em;
     overflow: hidden;
@@ -351,67 +354,77 @@
 
 <template>
   <div :dir="dir" class="dropdown v-select" :class="dropdownClasses">
-    <div ref="toggle" @mousedown.prevent="toggleDropdown" :class="['dropdown-toggle', 'clearfix']">
+    <div ref="toggle" @mousedown.prevent="toggleDropdown" class="dropdown-toggle">
 
-      <span class="selected-tag" v-for="option in valueAsArray" v-bind:key="option.index">
-        <slot name="selected-option" v-bind="option">
-          {{ getOptionLabel(option) }}
+      <div class="vs__selected-options" ref="selectedOptions">
+        <slot v-for="option in valueAsArray" name="selected-option-container"
+              :option="(typeof option === 'object')?option:{[label]: option}" :deselect="deselect" :multiple="multiple" :disabled="disabled">
+          <span class="selected-tag" v-bind:key="option.index">
+            <slot name="selected-option" v-bind="(typeof option === 'object')?option:{[label]: option}">
+              {{ getOptionLabel(option) }}
+            </slot>
+            <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </span>
         </slot>
-        <button v-if="multiple" :disabled="disabled" @click="deselect(option)" type="button" class="close" aria-label="Remove option">
+
+        <input
+                ref="search"
+                :value="search"
+                @keydown.delete="maybeDeleteValue"
+                @keyup.esc="onEscape"
+                @keydown.up.prevent="typeAheadUp"
+                @keydown.down.prevent="typeAheadDown"
+                @keydown.enter.prevent="typeAheadSelect"
+                @keydown.tab="onTab"
+                @blur="onSearchBlur"
+                @focus="onSearchFocus"
+                @input="search = $event.target.value"
+                type="search"
+                class="form-control"
+                :autocomplete="autocomplete"
+                :disabled="disabled"
+                :placeholder="searchPlaceholder"
+                :tabindex="tabindex"
+                :readonly="!searchable"
+                :id="inputId"
+                role="combobox"
+                :aria-expanded="dropdownOpen"
+                aria-label="Search for option"
+        >
+
+      </div>
+      <div class="vs__actions">
+        <button
+          v-show="showClearButton"
+          :disabled="disabled"
+          @click="clearSelection"
+          type="button"
+          class="clear"
+          title="Clear selection"
+        >
           <span aria-hidden="true">&times;</span>
         </button>
-      </span>
 
-      <input
-              ref="search"
-              v-model="search"
-              @keydown.delete="maybeDeleteValue"
-              @keyup.esc="onEscape"
-              @keydown.up.prevent="typeAheadUp"
-              @keydown.down.prevent="typeAheadDown"
-              @keydown.enter.prevent="typeAheadSelect"
-              @blur="onSearchBlur"
-              @focus="onSearchFocus"
-              type="search"
-              class="form-control"
-              autocomplete="false"
-              :disabled="disabled"
-              :placeholder="searchPlaceholder"
-              :tabindex="tabindex"
-              :readonly="!searchable"
-              :style="{ width: isValueEmpty ? '100%' : 'auto' }"
-              :id="inputId"
-              aria-label="Search for option"
-      >
+        <i v-if="!noDrop" ref="openIndicator" role="presentation" class="open-indicator"></i>
 
-      <button
-        v-show="showClearButton"
-        :disabled="disabled"
-        @click="clearSelection"
-        type="button"
-        class="clear"
-        title="Clear selection"
-      >
-        <span aria-hidden="true">&times;</span>
-      </button>
-
-      <i v-if="!noDrop" ref="openIndicator" role="presentation" class="open-indicator"></i>
-
-      <slot name="spinner">
-        <div class="spinner" v-show="mutableLoading">Loading...</div>
-      </slot>
+        <slot name="spinner">
+          <div class="spinner" v-show="mutableLoading">Loading...</div>
+        </slot>
+      </div>
     </div>
 
     <transition :name="transition">
-      <ul ref="dropdownMenu" v-if="dropdownOpen" class="dropdown-menu" :style="{ 'max-height': maxHeight }">
-        <li v-for="(option, index) in filteredOptions" v-bind:key="index" :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }" @mouseover="typeAheadPointer = index">
-          <a @mousedown.prevent="select(option)">
-          <slot name="option" v-bind="option">
+      <ul ref="dropdownMenu" v-if="dropdownOpen" class="dropdown-menu" :style="{ 'max-height': maxHeight }" role="listbox" @mousedown="onMousedown" @mouseup="onMouseup">
+        <li role="option" v-for="(option, index) in filteredOptions" v-bind:key="index" :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }" @mouseover="typeAheadPointer = index">
+          <a @mousedown.prevent.stop="select(option)">
+          <slot name="option" v-bind="(typeof option === 'object')?option:{[label]: option}">
             {{ getOptionLabel(option) }}
           </slot>
           </a>
         </li>
-        <li v-if="!filteredOptions.length" class="no-options">
+        <li v-if="!filteredOptions.length" class="no-options" @mousedown.stop="">
           <slot name="no-options">Sorry, no matching options.</slot>
         </li>
       </ul>
@@ -459,6 +472,15 @@
       disabled: {
         type: Boolean,
         default: false
+      },
+
+      /**
+       * Can the user clear the selected property.
+       * @type {Boolean}
+       */
+      clearable: {
+        type: Boolean,
+        default: true
       },
 
       /**
@@ -537,9 +559,36 @@
         default: 'label'
       },
 
+
+      /**
+       * Value of the 'autocomplete' field of the input
+       * element.
+       * @type {String}
+       */
+      autocomplete: {
+        type: String,
+        default: 'off'
+      },
+
+      /**
+       * Tells vue-select what key to use when generating option
+       * values when each `option` is an object.
+       * @type {String}
+       */
+      index: {
+        type: String,
+        default: null
+      },
+
       /**
        * Callback to generate the label text. If {option}
        * is an object, returns option[this.label] by default.
+       *
+       * Label text is used for filtering comparison and
+       * displaying. If you only need to adjust the
+       * display, you should use the `option` and
+       * `selected-option` slots.
+       *
        * @type {Function}
        * @param  {Object || String} option
        * @return {String}
@@ -547,10 +596,19 @@
       getOptionLabel: {
         type: Function,
         default(option) {
+          if( this.index ) {
+            option = this.findOptionByIndexValue(option)
+          }
+
           if (typeof option === 'object') {
-            if (this.label && option[this.label]) {
-              return option[this.label]
+            if (!option.hasOwnProperty(this.label)) {
+              return console.warn(
+                `[vue-select warn]: Label key "option.${this.label}" does not` +
+                ` exist in options object ${JSON.stringify(option)}.\n` +
+                'http://sagalbot.github.io/vue-select/#ex-labels'
+              )
             }
+            return option[this.label]
           }
           return option;
         }
@@ -566,8 +624,27 @@
       onChange: {
         type: Function,
         default: function (val) {
-          this.$emit('input', val)
+          this.$emit('change', val);
         }
+      },
+
+      onInput: {
+        type: Function,
+        default: function (val) {
+          this.$emit('input', val);
+        }
+      },
+
+      /**
+       * Select the current value if selectOnTab is enabled
+       */
+      onTab: {
+        type: Function,
+        default: function () {
+          if (this.selectOnTab) {
+            this.typeAheadSelect();
+          }
+        },
       },
 
       /**
@@ -607,6 +684,47 @@
       filterable: {
         type: Boolean,
         default: true
+      },
+
+      /**
+       * Callback to determine if the provided option should
+       * match the current search text. Used to determine
+       * if the option should be displayed.
+       * @type   {Function}
+       * @param  {Object || String} option
+       * @param  {String} label
+       * @param  {String} search
+       * @return {Boolean}
+       */
+      filterBy: {
+        type: Function,
+        default(option, label, search) {
+          return (label || '').toLowerCase().indexOf(search.toLowerCase()) > -1
+        }
+      },
+
+      /**
+       * Callback to filter results when search text
+       * is provided. Default implementation loops
+       * each option, and returns the result of
+       * this.filterBy.
+       * @type   {Function}
+       * @param  {Array} list of options
+       * @param  {String} search text
+       * @param  {Object} vSelect instance
+       * @return {Boolean}
+       */
+      filter: {
+        "type": Function,
+        default(options, search) {
+          return options.filter((option) => {
+            let label = this.getOptionLabel(option)
+            if (typeof label === 'number') {
+              label = label.toString()
+            }
+            return this.filterBy(option, label, search)
+          });
+        }
       },
 
       /**
@@ -671,6 +789,14 @@
             type: String,
             default: 'bottom'
         },
+      /**
+       * When true, hitting the 'tab' key will select the current select value
+       * @type {Boolean}
+       */
+      selectOnTab: {
+        type: Boolean,
+        default: false
+      }
     },
 
     data() {
@@ -685,7 +811,7 @@
     watch: {
       /**
        * When the value prop changes, update
-			 * the internal mutableValue.
+       * the internal mutableValue.
        * @param  {mixed} val
        * @return {void}
        */
@@ -699,7 +825,7 @@
        * @param  {string|object} old
        * @return {void}
        */
-			mutableValue(val, old) {
+      mutableValue(val, old) {
           this.onChange ? this.onChange(val) : null;
       },
 
@@ -714,24 +840,24 @@
       },
 
       /**
-			 * Maybe reset the mutableValue
+       * Maybe reset the mutableValue
        * when mutableOptions change.
        * @return {[type]} [description]
        */
       mutableOptions() {
         if (!this.taggable && this.resetOnOptionsChange) {
-					this.mutableValue = this.multiple ? [] : null
+          this.mutableValue = this.multiple ? [] : null
         }
       },
 
       /**
-			 * Always reset the mutableValue when
+       * Always reset the mutableValue when
        * the multiple prop changes.
        * @param  {Boolean} val
        * @return {void}
        */
       multiple(val) {
-				this.mutableValue = val ? [] : null
+        this.mutableValue = val ? [] : null
       }
     },
 
@@ -740,9 +866,9 @@
      * attach any event listeners.
      */
     created() {
-			this.mutableValue = this.value
+      this.mutableValue = this.value
       this.mutableOptions = this.options.slice(0)
-			this.mutableLoading = this.loading
+      this.mutableLoading = this.loading
 
       this.$on('option:created', this.maybePushTag)
     },
@@ -765,14 +891,23 @@
           if (this.taggable && !this.optionExists(option)) {
             option = this.createOption(option)
           }
-
+          if(this.index) {
+            if (!option.hasOwnProperty(this.index)) {
+              return console.warn(
+                  `[vue-select warn]: Index key "option.${this.index}" does not` +
+                  ` exist in options object ${JSON.stringify(option)}.`
+              )
+            }
+            option = option[this.index]
+          }
           if (this.multiple && !this.mutableValue) {
             this.mutableValue = [option]
           } else if (this.multiple) {
-            this.mutableValue.push(option)
+            this.mutableValue = [...this.mutableValue, option]
           } else {
             this.mutableValue = option
           }
+          this.onInput(this.mutableValue);
         }
 
         this.onAfterSelect(option)
@@ -787,24 +922,25 @@
         if (this.multiple) {
           let ref = -1
           this.mutableValue.forEach((val) => {
-            if (val === option || typeof val === 'object' && val[this.label] === option[this.label]) {
+            if (val === option || (this.index && val === option[this.index]) || (typeof val === 'object' && val[this.label] === option[this.label])) {
               ref = val
             }
           })
-          var index = this.mutableValue.indexOf(ref)
-          this.mutableValue.splice(index, 1)
+          this.mutableValue = this.mutableValue.filter(entry => entry !== ref)
         } else {
           this.mutableValue = null
         }
+        this.onInput(this.mutableValue);
       },
 
       /**
        * Clears the currently selected value(s)
        * @return {void}
        */
-       clearSelection() {
-         this.mutableValue = this.multiple ? [] : null
-       },
+      clearSelection() {
+        this.mutableValue = this.multiple ? [] : null
+        this.onInput(this.mutableValue)
+      },
 
       /**
        * Called from this.select after each selection.
@@ -832,7 +968,8 @@
        * @return {void}
        */
       toggleDropdown(e) {
-        if (e.target === this.$refs.openIndicator || e.target === this.$refs.search || e.target === this.$refs.toggle || e.target === this.$el) {
+        if (e.target === this.$refs.openIndicator || e.target === this.$refs.search || e.target === this.$refs.toggle ||
+            e.target.classList.contains('selected-tag') || e.target === this.$el) {
           if (this.open) {
             this.$refs.search.blur() // dropdown will close on blur
           } else {
@@ -850,22 +987,47 @@
        * @return {Boolean}        True when selected | False otherwise
        */
       isOptionSelected(option) {
-        if (this.multiple && this.mutableValue) {
-          let selected = false
-          this.mutableValue.forEach(opt => {
-            if (typeof opt === 'object' && opt[this.label] === option[this.label]) {
-              selected = true
-            } else if (typeof opt === 'object' && opt[this.label] === option) {
-              selected = true
-            }
-            else if (opt === option) {
-              selected = true
-            }
-          })
-          return selected
-        }
+        return this.valueAsArray.some(value => {
+          if (typeof value === 'object') {
+            return this.optionObjectComparator(value, option)
+          }
+          return value === option || value === option[this.index]
+        })
+      },
 
-        return this.mutableValue === option
+      /**
+       * Determine if two option objects are matching.
+       *
+       * @param value {Object}
+       * @param option {Object}
+       * @returns {boolean}
+       */
+      optionObjectComparator(value, option) {
+        if (this.index && value === option[this.index]) {
+          return true
+        } else if ((value[this.label] === option[this.label]) || (value[this.label] === option)) {
+          return true
+        } else if (this.index && value[this.index] === option[this.index]) {
+          return true
+        }
+        return false;
+      },
+
+      /**
+       * Finds an option from this.options
+       * where option[this.index] matches
+       * the passed in value.
+       *
+       * @param value {Object}
+       * @returns {*}
+       */
+      findOptionByIndexValue(value) {
+        this.options.forEach(_option => {
+          if (JSON.stringify(_option[this.index]) === JSON.stringify(value)) {
+            value = _option
+          }
+        })
+        return value
       },
 
       /**
@@ -887,9 +1049,28 @@
        * @return {void}
        */
       onSearchBlur() {
-        if (this.clearSearchOnBlur) {
-          this.search = ''
+        if (this.mousedown && !this.searching) {
+          this.mousedown = false
+        } else {
+          if (this.clearSearchOnBlur) {
+            this.search = ''
+          }
+          this.closeSearchOptions()
+          return
         }
+        // Fixed bug where no-options message could not be closed
+        if(this.search.length === 0 && this.options.length === 0){
+          this.closeSearchOptions()
+          return
+        }
+      },
+
+      /**
+       * 'Private' function to close the search options
+       * @emits  {search:blur}
+       * @returns {void}
+       */
+      closeSearchOptions(){
         this.open = false
         this.$emit('search:blur')
       },
@@ -910,8 +1091,8 @@
        * @return {this.value}
        */
       maybeDeleteValue() {
-        if (!this.$refs.search.value.length && this.mutableValue) {
-          return this.multiple ? this.mutableValue.pop() : this.mutableValue = null
+        if (!this.$refs.search.value.length && this.mutableValue && this.clearable) {
+          this.mutableValue = this.multiple ? this.mutableValue.slice(0, -1) : null
         }
       },
 
@@ -947,6 +1128,21 @@
         if (this.pushTags) {
           this.mutableOptions.push(option)
         }
+      },
+
+      /**
+       * Event-Handler to help workaround IE11 (probably fixes 10 as well)
+       * firing a `blur` event when clicking
+       * the dropdown's scrollbar, causing it
+       * to collapse abruptly.
+       * @return {void}
+       */
+      onMousedown() {
+        this.mousedown = true
+      },
+
+      onMouseup() {
+        this.mousedown = false
       }
     },
 
@@ -964,7 +1160,7 @@
           searchable: this.searchable,
           unsearchable: !this.searchable,
           loading: this.mutableLoading,
-          rtl: this.dir === 'rtl',
+          rtl: this.dir === 'rtl', // This can be removed - styling is handled by `dir="rtl"` attribute
           disabled: this.disabled,
           'direction-top': this.direction === 'top',
           'direction-bottom': this.direction === 'bottom'
@@ -1020,14 +1216,7 @@
         if (!this.filterable && !this.taggable) {
           return this.mutableOptions.slice()
         }
-        let options = this.mutableOptions.filter((option) => {
-          if (typeof option === 'object' && option.hasOwnProperty(this.label)) {
-            return option[this.label].toLowerCase().indexOf(this.search.toLowerCase()) > -1
-          } else if (typeof option === 'object' && !option.hasOwnProperty(this.label)) {
-            return console.warn(`[vue-select warn]: Label key "option.${this.label}" does not exist in options object.\nhttp://sagalbot.github.io/vue-select/#ex-labels`)
-          }
-          return option.toLowerCase().indexOf(this.search.toLowerCase()) > -1
-        })
+        let options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
         if (this.taggable && this.search.length && !this.optionExists(this.search)) {
           options.unshift(this.search)
         }
@@ -1041,9 +1230,9 @@
       isValueEmpty() {
         if (this.mutableValue) {
           if (typeof this.mutableValue === 'object') {
-            return !Object.keys(this.mutableValue).length
+            return ! Object.keys(this.mutableValue).length
           }
-          return !this.mutableValue.length
+          return ! this.valueAsArray.length
         }
 
         return true;
@@ -1054,10 +1243,10 @@
        * @return {Array}
        */
       valueAsArray() {
-        if (this.multiple) {
+        if (this.multiple && this.mutableValue) {
           return this.mutableValue
         } else if (this.mutableValue) {
-          return [this.mutableValue]
+          return [].concat(this.mutableValue)
         }
 
         return []
@@ -1068,7 +1257,7 @@
        * @return {Boolean}
        */
       showClearButton() {
-        return !this.multiple && !this.open && this.mutableValue != null
+        return !this.multiple && this.clearable && !this.open && this.mutableValue != null
       }
     },
 
